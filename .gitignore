@@ -1,0 +1,39 @@
+# Read-only external reference repositories
+/references/
+
+# Local plans, tasks, hand-offs, and pre-release working notes
+/plans/
+/tasks/
+
+# Scratch data, vulnerability databases, and generated builds
+/tmp/
+
+# Local agent and tool state
+AGENTS.md
+/.agents/
+/.codex/
+
+# Repository-local developer configuration and credentials
+/.local/
+/.env
+/.env.*
+!/.env.example
+token.env
+config.json
+
+# Runtime audit logs
+*.jsonl
+
+# Build and test artifacts
+/agent-cli-discord
+/build/
+/dist/
+*.test
+coverage.out
+*.coverprofile
+
+# Common editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp

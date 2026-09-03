@@ -1,0 +1,9 @@
+{
+  "schema_version": "1",
+  "guild_id": "123456789012345678",
+  "allowed_channel_ids": [
+    "234567890123456789"
+  ],
+  "request_timeout": "15s",
+  "command_timeout": "30s"
+}
