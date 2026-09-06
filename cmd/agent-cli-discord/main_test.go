@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -594,6 +595,32 @@ func decodeOneJSON(t *testing.T, raw []byte, dst any) {
 	var extra any
 	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
 		t.Fatalf("output contains more than one JSON value: %q", raw)
+	}
+}
+
+func TestVersionFromBuildInfoReportsStampedModuleVersion(t *testing.T) {
+	// Releases are identified by the module version Go stamps from the git tag.
+	// Untagged, dirty, or metadata-free builds must remain distinguishable from a
+	// tagged release so a reported version can be trusted.
+	cases := []struct {
+		name string
+		info *debug.BuildInfo
+		ok   bool
+		want string
+	}{
+		{name: "no build info", info: nil, ok: false, want: "dev"},
+		{name: "empty version", info: &debug.BuildInfo{}, ok: true, want: "dev"},
+		{name: "go test placeholder", info: &debug.BuildInfo{Main: debug.Module{Version: "(devel)"}}, ok: true, want: "dev"},
+		{name: "tagged release", info: &debug.BuildInfo{Main: debug.Module{Version: "v1.0.0"}}, ok: true, want: "v1.0.0"},
+		{name: "untagged commit", info: &debug.BuildInfo{Main: debug.Module{Version: "v0.0.0-20260906121237-cb248015f190"}}, ok: true, want: "v0.0.0-20260906121237-cb248015f190"},
+		{name: "modified tree", info: &debug.BuildInfo{Main: debug.Module{Version: "v1.0.0+dirty"}}, ok: true, want: "v1.0.0+dirty"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := versionFromBuildInfo(tc.info, tc.ok); got != tc.want {
+				t.Fatalf("versionFromBuildInfo = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
 

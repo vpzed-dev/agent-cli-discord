@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -22,9 +23,23 @@ import (
 const (
 	executableName       = "agent-cli-discord"
 	schemaVersion        = "1"
-	version              = "dev"
 	maxMessageInputBytes = 8000
 )
+
+// executableVersion reports the module version Go stamps into the binary from
+// the git checkout: the tag on a clean HEAD (v1.0.0), a pseudo-version for an
+// untagged commit, or a +dirty suffix for a modified tree. Builds without that
+// metadata report "dev".
+func executableVersion() string {
+	return versionFromBuildInfo(debug.ReadBuildInfo())
+}
+
+func versionFromBuildInfo(info *debug.BuildInfo, ok bool) string {
+	if !ok || info == nil || info.Main.Version == "" || info.Main.Version == "(devel)" {
+		return "dev"
+	}
+	return info.Main.Version
+}
 
 type successEnvelope struct {
 	OK       bool     `json:"ok"`
@@ -91,7 +106,7 @@ func runWithOptions(args []string, stdout, stderr io.Writer, options runtimeOpti
 			OK: true,
 			Data: versionData{
 				Name:          executableName,
-				Version:       version,
+				Version:       executableVersion(),
 				SchemaVersion: schemaVersion,
 			},
 		})
@@ -466,6 +481,7 @@ func runDiscordCommand(stdout, stderr io.Writer, options runtimeOptions, operati
 	}
 	discordOptions := options.Discord
 	discordOptions.RequestTimeout = cfg.RequestTimeout
+	discordOptions.Version = executableVersion()
 	client := discord.New(credentialResult.Token, discordOptions)
 	access := policy.New(cfg.GuildID, cfg.AllowedChannelIDs, cfg.AllowedThreadIDs)
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.CommandTimeout)

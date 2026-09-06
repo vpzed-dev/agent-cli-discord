@@ -7,8 +7,11 @@ Gateway connection or daemon.
 
 ## Status
 
-The initial command surface is implemented and covered by local HTTP fixtures.
-Live-guild smoke testing and release packaging remain pre-release requirements.
+Releases are published for Linux amd64 as a statically linked executable on
+the [GitHub Releases](https://github.com/vpzed-dev/agent-cli-discord/releases)
+page, with a `SHA256SUMS` file to verify the download. Each release is
+live-tested against a dedicated Discord guild before publication. Other
+platforms build from source.
 
 ## Build
 
@@ -17,6 +20,10 @@ Go 1.27.1 or later is required.
 ```sh
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o agent-cli-discord ./cmd/agent-cli-discord
 ```
+
+The reported version comes from the git checkout: a release tag on a clean
+checkout yields `v1.0.0`, an untagged commit yields a pseudo-version, and
+uncommitted changes add `+dirty`. No build flag is needed.
 
 ## Configuration
 
