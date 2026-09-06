@@ -95,6 +95,11 @@ func TestSuccessfulCommandPreservesTokenFilePermissionWarning(t *testing.T) {
 	if err := os.WriteFile(tokenPath, []byte("DISCORD_BOT_TOKEN=test-token\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	// WriteFile applies the process umask; set the permissive mode explicitly so
+	// the warning is exercised regardless of the operator's umask.
+	if err := os.Chmod(tokenPath, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	configDir := writeTestConfig(t, tokenPath)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, `{"id":"12345678901234567","username":"agent","bot":true}`)

@@ -264,6 +264,11 @@ func TestLoadRejectsWritableByOtherUsers(t *testing.T) {
 	if err := os.WriteFile(path, []byte(raw), 0o622); err != nil {
 		t.Fatal(err)
 	}
+	// WriteFile applies the process umask; set the unsafe mode explicitly so the
+	// rejection is exercised regardless of the operator's umask.
+	if err := os.Chmod(path, 0o622); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, err := Load(path); err == nil {
 		t.Fatal("Load() error = nil, want unsafe-permission rejection")
