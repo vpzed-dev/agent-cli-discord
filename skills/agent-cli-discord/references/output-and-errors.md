@@ -50,9 +50,21 @@ and may have reached Discord).
 
 `retryable: true` is advice, not a promise. The CLI itself retries only
 idempotent requests that received a 429 with a valid delay, at most twice.
-Apply your own bounded retry policy and, whenever `outcome_unknown` is
-`true`, inspect Discord (`messages read`, `threads list`) before repeating a
-post, reply, or thread creation.
+For manual retries, use these rules:
+
+- Reads, reactions, and thread join/leave are idempotent. Retry transient
+  failures at most once; after a 429, wait before retrying. No usable wait
+  duration is exposed in the error object; if timing is unknown, defer and
+  report the rate limit rather than retrying immediately.
+- Posts, replies, and thread creation can succeed despite a transport error,
+  invalid response, output-write failure (exit 1), or audit-log failure.
+  Inspect recent messages or active threads before repeating them, even if
+  `outcome_unknown` is absent. If the result cannot be established, report
+  uncertainty and stop. An empty active-thread list does not prove that no
+  thread was created: archived threads are excluded.
+- A definite 429 rejection may be retried once after waiting; configuration,
+  policy, and argument failures require correcting the cause first.
+  Never expand access policy without user authorization.
 
 ## Error codes
 
@@ -63,19 +75,19 @@ post, reply, or thread creation.
 | `config.unavailable` | the user configuration directory could not be resolved | set `HOME` or `XDG_CONFIG_HOME` |
 | `config.invalid` | `config.json` missing, wrong permissions, or failed validation | read the message and fix the file; see configuration.md |
 | `credential.unavailable` | no usable token from environment or file | see configuration.md |
-| `log.unavailable` | audit log could not be opened or appended (fail-closed) | fix the log path; if the message says the command completed, do not repeat it |
-| `policy.guild_not_authorized` | guild mismatch | fix `guild_id` |
-| `policy.channel_not_authorized` | `--channel` is neither an allowed channel nor an authorized thread, or a thread parent is not allowed | add the channel to `allowed_channel_ids` or use an allowed one |
+| `log.unavailable` | audit log could not be opened or appended (fail-closed) | fix the log destination; inspect Discord before repeating a mutation |
+| `policy.guild_not_authorized` | guild mismatch | verify the intended guild; change configuration only if authorized |
+| `policy.channel_not_authorized` | `--channel` is neither an allowed channel nor an authorized thread, or a thread parent is not allowed | verify the target or use an authorized one; do not expand the allowlist without authorization |
 | `policy.thread_not_authorized` | `threads join` or `leave` target fails local policy | check the parent channel and `allowed_thread_ids` |
 | `policy.thread_creation_restricted` | `allowed_thread_ids` is nonempty | post into an existing listed thread instead |
 | `attachment.unavailable` | an `--attach` path could not be opened | fix the path |
 | `attachment.invalid` | not a regular file, over 10 MiB, or unsafe filename | choose another file |
 | `attachment.too_large` | combined attachments over 24 MiB | send fewer or smaller files |
 | `discord.http_error` | any non-2xx status not mapped below | inspect `http_status` and `discord_code`; 5xx on idempotent requests is `retryable` |
-| `discord.transport_error` | network failure, timeout, or cancellation | retry idempotent requests; for others check `outcome_unknown` |
-| `discord.rate_limited` | 429 after retries were exhausted or not applicable | wait, then retry; `rate_limit_scope` says whether the whole bot is limited |
+| `discord.transport_error` | network failure, timeout, or cancellation | follow the retry rules above; inspect before repeating creation |
+| `discord.rate_limited` | 429 after retries were exhausted or not applicable | follow the bounded wait/retry rules above; scope identifies bot-wide limits |
 | `discord.invalid_request` | the CLI could not build the request | report as a bug |
-| `discord.invalid_response` | Discord's response could not be decoded or was inconsistent | retry once; report if persistent |
+| `discord.invalid_response` | Discord's response could not be decoded or was inconsistent | follow the command-aware retry rules above; creation may already have succeeded |
 | `discord.not_bot_identity` | `auth check` found a user account token | use a bot token |
 | `discord.guild_access_denied` | 403 listing guild channels | invite the bot to the guild and grant View Channel |
 | `discord.reaction_access_denied` | 403 changing a reaction | grant Add Reactions or Read Message History |

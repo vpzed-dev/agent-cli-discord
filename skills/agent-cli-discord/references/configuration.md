@@ -51,26 +51,20 @@ works on allowed parents. When it is nonempty, a thread must also be listed
 explicitly, and `threads create` is refused because a new thread's ID cannot
 be listed in advance.
 
-Complete template:
+Minimal configuration (replace both IDs with the authorized targets):
 
 ```json
 {
   "schema_version": "1",
   "guild_id": "123456789012345678",
-  "allowed_channel_ids": ["234567890123456789"],
-  "allowed_thread_ids": ["345678901234567890"],
-  "request_timeout": "15s",
-  "command_timeout": "30s",
-  "token_file": "/home/agent/.config/agent-cli-discord/token.env",
-  "log": {
-    "path": "/home/agent/.local/state/agent-cli-discord/audit.jsonl",
-    "level": "info"
-  }
+  "allowed_channel_ids": ["234567890123456789"]
 }
 ```
 
-Omit `allowed_thread_ids`, `token_file`, and `log` unless they are needed.
-The minimal file is `schema_version`, `guild_id`, and `allowed_channel_ids`.
+Add optional fields only when needed. A nonempty `allowed_thread_ids`
+disables thread creation. If enabling logging, first ensure the parent
+directory of `log.path` exists. Change guild or allowlists only within
+user-authorized scope; an access failure alone does not authorize a change.
 
 ## Bot token
 
