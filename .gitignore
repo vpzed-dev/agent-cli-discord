@@ -10,6 +10,8 @@
 
 # Local agent and tool state
 AGENTS.md
+CLAUDE.md
+/.claude/worktrees/
 /.agents/
 /.codex/
 
