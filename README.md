@@ -25,11 +25,50 @@ The reported version comes from the git checkout: a release tag on a clean
 checkout yields `v1.0.0`, an untagged commit yields a pseudo-version, and
 uncommitted changes add `+dirty`. No build flag is needed.
 
+## How to use
+
+1. Install the executable. Download `agent-cli-discord-linux-amd64` and
+   `SHA256SUMS` from the [Releases](https://github.com/vpzed-dev/agent-cli-discord/releases)
+   page, verify the download, and place the binary on `PATH`:
+
+   ```sh
+   sha256sum -c SHA256SUMS
+   install -m 0755 agent-cli-discord-linux-amd64 ~/.local/bin/agent-cli-discord
+   agent-cli-discord version
+   ```
+
+   Alternatively, `go install github.com/vpzed-dev/agent-cli-discord/cmd/agent-cli-discord@v1.0.0`
+   builds from source into `$(go env GOBIN)` or `$(go env GOPATH)/bin`.
+
+2. Create the configuration file. The CLI reads `config.json` from an
+   `agent-cli-discord` directory under the platform user configuration
+   directory; there is no `--config` flag.
+
+   | Platform | Directory |
+   |----------|-----------|
+   | Linux | `$XDG_CONFIG_HOME/agent-cli-discord/`, else `~/.config/agent-cli-discord/` |
+   | macOS | `~/Library/Application Support/agent-cli-discord/` |
+   | Windows | `%AppData%\agent-cli-discord\` |
+
+   Copy [examples/config.example.json](examples/config.example.json) there as
+   `config.json` and edit it. The file must not be writable by group or other
+   users.
+
+3. Provide the bot token. Set `DISCORD_BOT_TOKEN` in the environment, or copy
+   [examples/token.env.example](examples/token.env.example) to `token.env` in
+   the same directory and `chmod 600` it, or point `token_file` in the
+   configuration at a token file. Sources are checked in that order.
+
+4. Optionally install the agent skill.
+   [skills/agent-cli-discord](skills/agent-cli-discord/SKILL.md) is an
+   [Agent Skill](https://agentskills.io/) that teaches a coding agent how to
+   use this tool. Copy or symlink that directory into the harness's skills
+   location, for example `.claude/skills/` or `.agents/skills/`.
+
 ## Configuration
 
-Create `agent-cli-discord/config.json` below the platform user configuration
-directory. Configuration is strict JSON; comments, trailing commas, duplicate
-keys, and unknown fields are rejected.
+Configuration is strict JSON; comments, trailing commas, duplicate keys, and
+unknown fields are rejected.
 
 The public templates are [examples/config.example.json](examples/config.example.json)
 and [examples/token.env.example](examples/token.env.example).
