@@ -79,8 +79,14 @@ command.
 
 ## Release gate and setup
 
-Start only from a clean checkout of the exact commit being evaluated. All four
-local checks must pass before a token is installed:
+Start only from a clean checkout of the exact commit being evaluated. For a
+release, that commit is the tagged one: push the `vX.Y.Z` tag first, build from
+the clean tagged checkout, run this plan against that executable, and publish
+that same file with its checksum. The tested bytes are then the released bytes,
+so a passing run never needs repeating for the same tag. If the run fails,
+delete the tag, fix the problem through a reviewed change, and tag again.
+
+All four local checks must pass before a token is installed:
 
 ```sh
 GOCACHE=/tmp/agent-cli-discord-go-cache go test ./...

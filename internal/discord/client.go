@@ -15,13 +15,15 @@ import (
 
 const (
 	defaultBaseURL          = "https://discord.com/api/v10"
-	defaultUserAgent        = "DiscordBot (https://github.com/vpzed-dev/agent-cli-discord, dev)"
+	userAgentFormat         = "DiscordBot (https://github.com/vpzed-dev/agent-cli-discord, %s)"
+	defaultVersion          = "dev"
 	defaultMaxResponseBytes = 8 << 20
 	defaultMaxRetries       = 2
 )
 
 type Options struct {
 	BaseURL          string
+	Version          string
 	HTTPClient       *http.Client
 	RequestTimeout   time.Duration
 	MaxResponseBytes int64
@@ -58,6 +60,7 @@ func (e *Error) Error() string {
 type Client struct {
 	token            string
 	baseURL          string
+	userAgent        string
 	httpClient       *http.Client
 	requestTimeout   time.Duration
 	maxResponseBytes int64
@@ -88,11 +91,15 @@ func New(token string, options Options) *Client {
 	if wait == nil {
 		wait = waitContext
 	}
+	version := options.Version
+	if version == "" {
+		version = defaultVersion
+	}
 	maxRetries := options.MaxRetries
 	if maxRetries == 0 {
 		maxRetries = defaultMaxRetries
 	}
-	return &Client{token: token, baseURL: baseURL, httpClient: &clone, requestTimeout: timeout, maxResponseBytes: maxBytes, maxRetries: maxRetries, wait: wait}
+	return &Client{token: token, baseURL: baseURL, userAgent: fmt.Sprintf(userAgentFormat, version), httpClient: &clone, requestTimeout: timeout, maxResponseBytes: maxBytes, maxRetries: maxRetries, wait: wait}
 }
 
 func (c *Client) Do(ctx context.Context, request Request, output any) error {
@@ -146,7 +153,7 @@ func (c *Client) doOnce(ctx context.Context, request Request) (*http.Response, c
 		return nil, nil, &Error{Code: "discord.invalid_request", Message: "could not construct Discord request"}
 	}
 	req.Header.Set("Authorization", "Bot "+c.token)
-	req.Header.Set("User-Agent", defaultUserAgent)
+	req.Header.Set("User-Agent", c.userAgent)
 	if request.ContentType != "" {
 		req.Header.Set("Content-Type", request.ContentType)
 	} else if request.JSONBody != nil {

@@ -14,6 +14,25 @@ import (
 
 const secretToken = "secret-token-never-disclose"
 
+func TestNewSendsConfiguredVersionInUserAgent(t *testing.T) {
+	// Discord asks bots to identify their version in User-Agent; a release build
+	// must report the stamped module version rather than the "dev" default.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("User-Agent") != "DiscordBot (https://github.com/vpzed-dev/agent-cli-discord, v1.0.0)" {
+			t.Fatalf("User-Agent = %q", r.Header.Get("User-Agent"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+
+	client := New(secretToken, Options{BaseURL: server.URL, HTTPClient: server.Client(), Version: "v1.0.0"})
+	var result struct{}
+	if err := client.Do(context.Background(), Request{Method: http.MethodGet, Path: "/users/@me", Idempotent: true}, &result); err != nil {
+		t.Fatalf("Do: %v", err)
+	}
+}
+
 func TestDoBuildsV10BotRequestAndDecodesJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v10/channels/123/messages" || r.Method != http.MethodPost {

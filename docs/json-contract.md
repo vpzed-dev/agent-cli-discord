@@ -156,6 +156,11 @@ boolean `locked`.
 ### `version`
 
 `data` contains string `name`, string `version`, and string `schema_version`.
+`version` is the Go module version stamped into the executable at build time:
+a release tag such as `v1.0.0` when built from a clean checkout of that tag, a
+pseudo-version such as `v0.0.0-20260906121237-cb248015f190` for an untagged
+commit, and a `+dirty` suffix when the tree had uncommitted changes. It is `dev`
+when no build metadata is available.
 
 ### `auth check`
 
