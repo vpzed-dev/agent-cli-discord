@@ -18,6 +18,12 @@ Steps are labeled by where the tester performs them:
 - **[CLI]** means an invocation of the candidate `agent-cli-discord` binary and
   therefore, except for `version`, a possible Discord REST API request.
 
+`scripts/live-test.sh` runs this plan interactively. It performs the [Shell] and
+[CLI] steps itself, validates every captured result, prompts for each
+[Discord UI] confirmation, checks the audit log, and writes `report.md` with a
+PASS, FAIL, or INCONCLUSIVE verdict into the evidence directory. The sections
+below remain the authoritative definition of what the script checks.
+
 ## Safety envelope
 
 **[Discord UI]** Create one private test guild with these resources:
