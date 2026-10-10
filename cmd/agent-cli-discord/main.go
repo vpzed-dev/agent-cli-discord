@@ -92,8 +92,11 @@ func run(args []string, stdout, stderr io.Writer) int {
 }
 
 func runWithOptions(args []string, stdout, stderr io.Writer, options runtimeOptions) int {
+	if handled, code := tryHelp(args, stdout, stderr); handled {
+		return code
+	}
 	if len(args) == 0 {
-		return writeError(stderr, "cli.invalid_arguments", "a command is required")
+		return writeError(stderr, "cli.invalid_arguments", "a command is required; use --help for usage")
 	}
 	options.AuditCommand, options.AuditIDs = auditMetadata(args)
 
@@ -254,7 +257,7 @@ func runReactionsCommand(args []string, stdout, stderr io.Writer, options runtim
 
 func runMessagesCommand(args []string, stdout, stderr io.Writer, options runtimeOptions) int {
 	if len(args) == 0 {
-		return writeError(stderr, "cli.invalid_arguments", "usage: agent-cli-discord messages read|get [options]")
+		return writeError(stderr, "cli.invalid_arguments", "usage: agent-cli-discord messages read|get|post|reply [options]")
 	}
 	switch args[0] {
 	case "read":

@@ -54,10 +54,12 @@ uncommitted changes add `+dirty`. No build flag is needed.
    `config.json` and edit it. The file must not be writable by group or other
    users.
 
-3. Provide the bot token. Set `DISCORD_BOT_TOKEN` in the environment, or copy
-   [examples/token.env.example](examples/token.env.example) to `token.env` in
-   the same directory and `chmod 600` it, or point `token_file` in the
-   configuration at a token file. Sources are checked in that order.
+3. Provide the bot token. The CLI selects `DISCORD_BOT_TOKEN` from the
+   environment first, then a configured `token_file`, then `token.env` in
+   the configuration directory. Use
+   [examples/token.env.example](examples/token.env.example) as the token-file
+   template and `chmod 600` the file. An empty environment token fails, and
+   an invalid selected source does not fall back to another source.
 
 4. Optionally install the agent skill.
    [skills/agent-cli-discord](skills/agent-cli-discord/SKILL.md) is an
@@ -104,6 +106,22 @@ Optional JSONL logging is described in [docs/audit-logging.md](docs/audit-loggin
 
 ## Commands
 
+Help is built into the executable and works without configuration, credentials,
+stdin, or network access. Root help lists every command and setup requirements.
+Group and command help describe options, defaults, results, and retry safety:
+
+```sh
+agent-cli-discord --help
+agent-cli-discord help messages
+agent-cli-discord help messages read
+agent-cli-discord messages post -h
+```
+
+The accepted forms are `help [PATH]`, `--help`, `-h`, `PATH --help`, and
+`PATH -h`. Each word in `PATH` is a separate argument. Help forms cannot be
+combined with operational options, and `PATH help` is not an alias.
+No arguments still produce an error with a `--help` hint.
+
 ```text
 agent-cli-discord version
 agent-cli-discord auth check
@@ -121,10 +139,12 @@ agent-cli-discord threads leave --thread ID
 ```
 
 Message content is read from standard input unless `--file` is supplied. A
-message can have up to 10 `--attach` options. Results are one JSON document on
-standard output; failures are one JSON document on standard error and no
-success document. Field shapes, exit statuses, warnings, pagination, and error
-semantics are defined in [docs/json-contract.md](docs/json-contract.md).
+message can have up to 10 `--attach` options. Attachment-only calls still read
+stdin to EOF unless `--file` is supplied. Operational results are one JSON
+document on standard output; failures are one JSON document on standard error
+and no success document. Successful help is the plain-text exception on stdout,
+with empty stderr and exit status 0. Field shapes, exit statuses, warnings,
+pagination, and error semantics are defined in [docs/json-contract.md](docs/json-contract.md).
 
 When Discord returns a valid rate-limit delay, idempotent requests are retried
 at most twice after the initial attempt. The command timeout includes these

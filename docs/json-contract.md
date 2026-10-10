@@ -12,8 +12,8 @@ nullable.
 
 ## Streams and exit status
 
-Each successful command writes exactly one JSON document and a trailing newline
-to standard output and writes nothing to standard error:
+Each successful operational command writes exactly one JSON document and a
+trailing newline to standard output and writes nothing to standard error:
 
 ```json
 {"ok":true,"data":{},"warnings":["warning text"]}
@@ -47,6 +47,20 @@ failure as shown above. Exit status `1` means the CLI could not encode or write
 its result; in that case a complete JSON document is not guaranteed. Process
 termination by the operating system is outside this contract.
 
+### Offline help exception
+
+`help [PATH]`, `--help`, `-h`, `PATH --help`, and `PATH -h` write deterministic
+plain text to stdout, leave stderr empty, and exit 0. `PATH` is an exact command
+group or command, with separate arguments for each word. Help does not read
+configuration, credentials, stdin, or files, write audit logs, or call Discord.
+`version` remains an offline JSON command.
+
+Help accepts no operational options. `PATH help` is not supported. Unknown help
+paths and malformed explicit help requests produce `cli.invalid_arguments` on
+stderr and exit 2. Unknown ordinary command roots retain `cli.unknown_command`.
+No arguments still produce `cli.invalid_arguments` with a `--help` hint.
+Failed or short help writes exit 1 without a second diagnostic.
+
 ## Error object
 
 The `error` object always contains:
@@ -64,6 +78,11 @@ The following fields are omitted when they do not apply:
 - `outcome_unknown`: `true` when a non-idempotent request failed in transport
   and may have reached Discord. Before retrying, inspect Discord or otherwise
   reconcile the operation to avoid duplicate messages or threads.
+
+Absence of `outcome_unknown` does not prove that creation failed. Posts, replies,
+and thread creation may succeed before an invalid response, audit-log failure,
+or output-write failure. Inspect Discord before repeating them. If the outcome
+cannot be established, report the uncertainty instead of risking duplicates.
 
 Current error codes are grouped below. New codes may be added within schema
 version `1`; consumers must handle unrecognized codes safely.

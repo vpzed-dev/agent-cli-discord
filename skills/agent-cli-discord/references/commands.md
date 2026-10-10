@@ -5,8 +5,10 @@ Syntax is in [SKILL.md](../SKILL.md); output shapes and recovery are in
 
 ## Identity and discovery
 
-Only `version` is offline and reads no configuration or credentials.
-It reports a release tag, source pseudo-version, dirty build suffix, or `dev`.
+Help and `version` are offline and read no configuration or credentials.
+Use `agent-cli-discord --help` for all commands and `help PATH` for one topic.
+Help prints plain text; `version` returns JSON with a release tag,
+source pseudo-version, dirty build suffix, or `dev`.
 `auth check` rejects non-bot identities.
 `channels list` includes only configured allowed channels.
 `threads list` includes only active threads passing parent and thread

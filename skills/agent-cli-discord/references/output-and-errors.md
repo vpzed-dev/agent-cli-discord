@@ -8,7 +8,7 @@ version, so ignore fields you do not recognize.
 
 ## Envelopes and exit status
 
-Success, exit 0, exactly one document on stdout and nothing on stderr:
+Operational success, exit 0, exactly one document on stdout and nothing on stderr:
 
 ```json
 {"ok":true,"data":{},"warnings":["token file is readable by group or other users"]}
@@ -36,6 +36,11 @@ Failure, exit 2, exactly one document on stderr and nothing on stdout:
 
 Exit 1 means the CLI could not encode or write its result; a complete
 document is not guaranteed and neither stream should be trusted.
+
+Help is the text exception. `help [PATH]`, `--help`, `-h`, `PATH --help`, and
+`PATH -h` print plain text on stdout, leave stderr empty, and exit 0.
+Help requires no configuration or credentials. Malformed help still produces
+a JSON `cli.invalid_arguments` error. Failed or short help writes exit 1.
 
 ## Error object
 
@@ -70,8 +75,8 @@ For manual retries, use these rules:
 
 | Code | Cause | What to do |
 |------|-------|------------|
-| `cli.invalid_arguments` | malformed options or content; also emitted by the Discord layer as a second check | fix the invocation; the message often contains the usage string |
-| `cli.unknown_command` | unknown first word, including `help` and `--help` | use a command from this skill |
+| `cli.invalid_arguments` | malformed help, options, or content; also emitted by the Discord layer as a second check | fix the invocation; use `help PATH` for command usage |
+| `cli.unknown_command` | unknown ordinary command root | use `agent-cli-discord --help` to list commands |
 | `config.unavailable` | the user configuration directory could not be resolved | set `HOME` or `XDG_CONFIG_HOME` |
 | `config.invalid` | `config.json` missing, wrong permissions, or failed validation | read the message and fix the file; see configuration.md |
 | `credential.unavailable` | no usable token from environment or file | see configuration.md |
